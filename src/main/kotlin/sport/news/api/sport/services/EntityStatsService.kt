@@ -14,7 +14,7 @@ class EntityStatsService(
 
     @Transactional(readOnly = true)
     fun getTopEntitiesLastWeek(limit: Int): List<EntityCountDto> {
-        val oneWeekAgo = LocalDateTime.now().minusDays(7)
+        val oneWeekAgo = LocalDateTime.now().minusDays(100)
         val recentNews = newsRepository.findAllFromLastWeek(oneWeekAgo)
 
         return recentNews

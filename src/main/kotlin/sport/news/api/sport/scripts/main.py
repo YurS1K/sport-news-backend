@@ -34,4 +34,4 @@ for page in range(1, 16):
         data.append(i)
 
 parsed = pd.DataFrame(data)
-parsed.to_csv(f'D:\projects\sport\src\main\\resources\parsed_data_{time.}.csv', index=False, encoding="utf-8")
+parsed.to_csv(f'D:\projects\sport\src\main\\resources\parsed_data.csv', index=False, encoding="utf-8")
