@@ -39,8 +39,6 @@ def parse_championat_tags(article_url, headers, nlp, classifier):
         return []
 
 def format_date(date):
-    date = "12 марта 2026, 19:01 МСК"
-
     months = {
         'января': '01', 'февраля': '02', 'марта': '03', 'апреля': '04',
         'мая': '05', 'июня': '06', 'июля': '07', 'августа': '08',

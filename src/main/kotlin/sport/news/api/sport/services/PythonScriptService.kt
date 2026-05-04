@@ -7,7 +7,6 @@ import java.io.File
 
 @Service
 class PythonScriptService {
-
     @Value("\${python.path:python3}")
     private lateinit var pythonPath: String
 

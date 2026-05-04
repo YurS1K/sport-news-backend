@@ -12,5 +12,7 @@ interface NewsRepository : JpaRepository<News, Long> {
     fun findFirstByLink(link: String): News?
 
     @Query("SELECT n FROM News n WHERE n.date >= :fromDate")
-    fun findAllFromLastWeek(@Param("fromDate") fromDate: LocalDateTime): List<News>
+    fun findAllFromLastWeek(
+        @Param("fromDate") fromDate: LocalDateTime,
+    ): List<News>
 }

@@ -1,6 +1,5 @@
 import time
 from transformers import pipeline
-from Parsers.ria_sport_parser import parse_ria_sport
 from Parsers.championat_parser import parse_championat
 import pandas as pd
 import stanza
@@ -24,14 +23,10 @@ classifier = pipeline(task="sentiment-analysis",
                       truncation=True,
                       max_length=512)
 
-for url in ria_urls:
-    # time.sleep(60)
-    for i in parse_ria_sport(url, nlp, classifier):
-        data.append(i)
 for page in range(1, 16):
     time.sleep(60)
     for i in parse_championat(f"https://www.championat.com/news/{page}.html", nlp, classifier):
         data.append(i)
 
 parsed = pd.DataFrame(data)
-parsed.to_csv(f'D:\projects\sport\src\main\\resources\parsed_data.csv', index=False, encoding="utf-8")
+parsed.to_csv(f'D:\\projects\\sport\\src\main\\resources\\championat_parsed_data.csv', index=False, encoding="utf-8")

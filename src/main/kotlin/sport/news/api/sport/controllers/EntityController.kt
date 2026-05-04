@@ -11,20 +11,19 @@ import sport.news.api.sport.services.EntityStatsService
 @RestController
 @RequestMapping("/entities")
 class EntityController(
-    private val entityStatsService: EntityStatsService
+    private val entityStatsService: EntityStatsService,
 ) {
-
     @GetMapping("/top")
     fun getTopEntities(
-        @RequestParam(defaultValue = "10") limit: Int
+        @RequestParam(defaultValue = "10") limit: Int,
     ): List<EntityCountDto> {
-        return entityStatsService.getTopEntitiesLastWeek(limit)
+        return entityStatsService.getTopEntitiesByDate(limit)
     }
 
     @GetMapping("/news")
     fun getNewsByEntity(
         @RequestParam(name = "name") entityName: String,
-        @RequestParam(defaultValue = "7") days: Int
+        @RequestParam(defaultValue = "7") days: Int,
     ): List<News> {
         return entityStatsService.findNewsByEntity(entityName, days)
     }

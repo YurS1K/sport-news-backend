@@ -8,47 +8,65 @@ import kotlinx.coroutines.launch
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import sport.news.api.sport.entities.News
-import sport.news.api.sport.services.ParsingService
-import sport.news.api.sport.services.NewsCsvService
 import sport.news.api.sport.repositories.NewsRepository
+import sport.news.api.sport.services.NewsCsvService
+import sport.news.api.sport.services.ParsingService
 import java.nio.file.Paths
 
 @Component
 class NewsDataUpdater(
     private val parsingService: ParsingService,
     private val csvService: NewsCsvService,
-    private val newsRepository: NewsRepository
+    private val newsRepository: NewsRepository,
 ) {
-
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
+    private val projectRoot = Paths.get("").toAbsolutePath().toString()
+    private val scriptRiaPath = "$projectRoot/src/main/kotlin/sport/news/api/sport/scripts/ria_parsing.py"
+    private val scriptChampionatPath = "$projectRoot/src/main/kotlin/sport/news/api/sport/scripts/championat_parsing.py"
 
     @PostConstruct
     fun updateNewsDataOnStartup() {
-        val projectRoot = Paths.get("").toAbsolutePath().toString()
-        val scriptPath = "$projectRoot/src/main/kotlin/sport/news/api/sport/scripts/main.py"
-
         println("Запуск начальной загрузки данных в фоновом режиме...")
-        scope.launch { parsingService.runParsingAsync(scriptPath)}
+        scope.launch { parsingService.runParsingAsync(scriptRiaPath) }
+        scope.launch { parsingService.runParsingAsync(scriptChampionatPath) }
     }
 
-    @Scheduled(cron = "0 0 3 * * ?")
-    fun updateNewsDataScheduled() {
-        val projectRoot = Paths.get("").toAbsolutePath().toString()
-        val scriptPath = "$projectRoot/src/main/kotlin/sport/news/api/sport/scripts/main.py"
+    @Scheduled(cron = "0 0 */6 * * ?")
+    fun updateChampionatNewsDataScheduled() {
+        println("Плановое обновление данных Чемпионат...")
 
-        println("Плановое обновление данных...")
-        scope.launch {parsingService.runParsingAsync(scriptPath)}
+        scope.launch { parsingService.runParsingAsync(scriptChampionatPath) }
+    }
+
+    @Scheduled(cron = "0 0 */1 * * ?")
+    fun updateRiaNewsDataScheduled() {
+        println("Плановое обновление данных РИА Новости...")
+
+        scope.launch { parsingService.runParsingAsync(scriptRiaPath) }
     }
 
     @Synchronized
     fun loadNews() {
-        val newsList = csvService.readNewsFromCsv()
-            .distinctBy { it.link }
+        val riaNewsList =
+            csvService.readNewsFromRiaCsv()
+                .distinctBy { it.link }
+
+        val championatNewsList =
+            csvService.readNewsFromChampionatCsv()
+                .distinctBy { it.link }
 
         val newNews = mutableListOf<News>()
 
-        for (news in newsList) {
+        for (news in riaNewsList) {
+            if (newsRepository.findFirstByLink(news.link) == null) {
+                newNews.add(news)
+            } else {
+                println("Пропущен дубликат: ${news.title}")
+            }
+        }
+
+        for (news in championatNewsList) {
             if (newsRepository.findFirstByLink(news.link) == null) {
                 newNews.add(news)
             } else {
