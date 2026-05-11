@@ -1,9 +1,17 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 
+def clean_text_for_ner(text: str) -> str:
+    text = re.sub(r'[«»"“”\']', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
 def parse_championat_tags(article_url, headers, nlp, classifier):
+    blacklist = ['Чемпионата»', 'Чемпионат»', 'Чемпионата', 'Чемпионат']
     try:
         response = requests.get(article_url, headers=headers)
         response.raise_for_status()
@@ -19,17 +27,20 @@ def parse_championat_tags(article_url, headers, nlp, classifier):
         author = author_tag.get_text(strip=True) if author_tag else "Нет автора"
 
         parags = [parag.get_text(strip=False) for parag in article_soup.find('div', class_='article-content').find_all('p')]
-        text = "".join(parags)
+        text = " ".join(parags).replace('""', '"')
 
-        text = text.replace('""', '"')
-
-        text_lemma = text.replace(",", "")
+        text_lemma = clean_text_for_ner(text)
 
         ents = set()
         doc = nlp(text_lemma)
         for sentence in doc.sentences:
             for ent in sentence.ents:
-                ents.add(ent.text)
+                entity_text = ent.text
+
+                if entity_text in blacklist:
+                    continue
+
+                ents.add(entity_text)
 
         sentiment = classifier(text)
         return tags[1:], date, author, text, ents, sentiment[0]['label']
@@ -48,7 +59,6 @@ def format_date(date):
     day, month_name, year_time = date.split(' ', 2)
     year, time = year_time.split(', ')
     time = time.replace(' МСК', '')
-
     month = months[month_name]
 
     result = f"{time} {day}.{month}.{year}"
@@ -65,7 +75,6 @@ def parse_championat(url, nlp, classifier):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-
         news_container = soup.find('div', class_='news-items')
         if not news_container:
             return []

@@ -16,7 +16,7 @@ def parse_match_author(article_url, headers):
 
         parags = [parag.get_text(strip=False) for parag in
                   article_soup.find('div', class_='p-news-details-body-html').find_all('p')]
-        text = "".join(parags)
+        text = " ".join(parags)
 
         print(text)
         return author, text

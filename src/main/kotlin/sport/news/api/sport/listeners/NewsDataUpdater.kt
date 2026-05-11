@@ -32,14 +32,14 @@ class NewsDataUpdater(
         scope.launch { parsingService.runParsingAsync(scriptChampionatPath) }
     }
 
-    @Scheduled(cron = "0 0 */6 * * ?")
+    @Scheduled(cron = "0 0 */3 * * ?")
     fun updateChampionatNewsDataScheduled() {
         println("Плановое обновление данных Чемпионат...")
 
         scope.launch { parsingService.runParsingAsync(scriptChampionatPath) }
     }
 
-    @Scheduled(cron = "0 0 */1 * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     fun updateRiaNewsDataScheduled() {
         println("Плановое обновление данных РИА Новости...")
 

@@ -1,6 +1,18 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+
+
+def clean_ria_text(text):
+    pattern = r'^[А-ЯA-Z][^,]*?,\s+\d+\s+[а-я]+\s+[—–-]\s+РИА Новости(?:,\s+[А-Я][а-я]+\s+[А-Я][а-я]+)?[.:]?\s*'
+    return re.sub(pattern, '', text, flags=re.MULTILINE).strip()
+
+
+def clean_text_for_ner(text: str) -> str:
+    text = re.sub(r'[«»"“”\']', '', text)
+    return re.sub(r'\s+', ' ', text).strip()
+
 
 def parse_ria_sport_tags(article_url, headers, nlp, classifier):
     try:
@@ -15,20 +27,17 @@ def parse_ria_sport_tags(article_url, headers, nlp, classifier):
             tags = []
 
         date = article_soup.find('div', class_='article__info-date').get_text(strip=True)
-
         author_tag = article_soup.find('div', class_='article__author-name')
         author = author_tag.get_text(strip=True) if author_tag else "Нет автора"
 
-        parags = [parag.get_text(strip=False) for parag in article_soup.find_all('div', class_='article__text')]
+        parags = [p.get_text(strip=False) for p in article_soup.find_all('div', class_='article__text')]
+        text = " ".join(parags).replace('""', '"')
+        text = clean_ria_text(text)
 
-        text = "".join(parags)
-        text = text.replace('""', '"')
-
-        text_lemma = text.replace(",", "")
-
-        ents = set()
+        text_lemma = clean_text_for_ner(text)
         doc = nlp(text_lemma)
 
+        ents = set()
         for sentence in doc.sentences:
             for ent in sentence.ents:
                 ents.add(ent.text)
@@ -52,13 +61,11 @@ def parse_ria_sport(url, nlp, classifier):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-
         news_container = soup.find('div', class_='list')
         if not news_container:
             return []
 
         news_items = news_container.find_all('div', class_='list-item')
-
         parsed_data = []
 
         for item in news_items:
@@ -70,8 +77,7 @@ def parse_ria_sport(url, nlp, classifier):
             tags, date, author, text, ents, sentiment = parse_ria_sport_tags(link, headers, nlp, classifier) if link else []
 
             tags = list(set(filter(None, tags)))
-
-            date = date[0:16]
+            date = date[:16] if len(date) > 16 else date
 
             parsed_data.append({
                 'title': title,

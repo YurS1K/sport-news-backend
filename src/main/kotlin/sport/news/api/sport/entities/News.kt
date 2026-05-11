@@ -33,14 +33,15 @@ data class News(
     val source: String,
 ) {
     companion object {
-        private val dateTimeFormatter = DateTimeFormatterBuilder()
-            .appendPattern("HH:mm ")
-            .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, java.time.format.SignStyle.NOT_NEGATIVE)
-            .appendPattern(".")
-            .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, java.time.format.SignStyle.NOT_NEGATIVE)
-            .appendPattern(".")
-            .appendValue(ChronoField.YEAR, 4)
-            .toFormatter()
+        private val dateTimeFormatter =
+            DateTimeFormatterBuilder()
+                .appendPattern("HH:mm ")
+                .appendValue(ChronoField.DAY_OF_MONTH, 1, 2, java.time.format.SignStyle.NOT_NEGATIVE)
+                .appendPattern(".")
+                .appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, java.time.format.SignStyle.NOT_NEGATIVE)
+                .appendPattern(".")
+                .appendValue(ChronoField.YEAR, 4)
+                .toFormatter()
 
         fun fromCsvRow(
             title: String,
