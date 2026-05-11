@@ -15,4 +15,10 @@ interface NewsRepository : JpaRepository<News, Long> {
     fun findAllFromLastWeek(
         @Param("fromDate") fromDate: LocalDateTime,
     ): List<News>
+
+    @Query("SELECT n FROM News n JOIN n.entities e WHERE e = :entityName AND n.date >= :fromDate ORDER BY n.date ASC")
+    fun findByEntityFromDate(
+        @Param("entityName") entityName: String,
+        @Param("fromDate") fromDate: LocalDateTime,
+    ): List<News>
 }
