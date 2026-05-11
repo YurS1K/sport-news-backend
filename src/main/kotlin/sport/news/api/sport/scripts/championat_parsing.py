@@ -8,7 +8,7 @@ data = []
 nlp = get_nlp()
 classifier = get_classifier()
 
-for page in range(1, 8):
+for page in range(1, 2):
     time.sleep(30)
     print(f"Parsing https://www.championat.com/news/{page}.html")
     for i in parse_championat(f"https://www.championat.com/news/{page}.html", nlp, classifier):
