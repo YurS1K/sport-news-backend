@@ -31,7 +31,7 @@ def parse_ria_sport_tags(article_url, headers, nlp, classifier):
         author = author_tag.get_text(strip=True) if author_tag else "Нет автора"
 
         parags = [p.get_text(strip=False) for p in article_soup.find_all('div', class_='article__text')]
-        text = " ".join(parags).replace('""', '"')
+        text = "\n".join(parags).replace('""', '"')
         text = clean_ria_text(text)
 
         text_lemma = clean_text_for_ner(text)

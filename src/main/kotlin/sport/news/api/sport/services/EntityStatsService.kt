@@ -1,5 +1,7 @@
 package sport.news.api.sport.services
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import sport.news.api.sport.dto.EntityCountDto
@@ -13,29 +15,40 @@ import java.time.LocalDateTime
 @Service
 class EntityStatsService(
     private val newsRepository: NewsRepository,
+    private val topEntitiesCacheService: TopEntitiesCacheService,
 ) {
+
     @Transactional(readOnly = true)
     fun getTopEntitiesByDate(limit: Int): List<EntityCountDto> {
-        val oneWeekAgo = LocalDateTime.now().minusDays(7)
-        val recentNews = newsRepository.findAllFromLastWeek(oneWeekAgo)
-
-        return recentNews
-            .flatMap { it.entities }
-            .groupingBy { it }
-            .eachCount()
-            .map { (entity, count) -> EntityCountDto(entity, count.toLong()) }
+        val cachedStats = topEntitiesCacheService.getCurrentCache()
+        return cachedStats
             .sortedByDescending { it.count }
             .take(limit)
+            .map { EntityCountDto(it.entity, it.count) }
     }
 
     @Transactional(readOnly = true)
     fun findNewsByEntity(
         entityName: String,
-        days: Int = 7,
+        fromDate: LocalDateTime,
+        toDate: LocalDateTime
     ): List<News> {
-        val from = LocalDateTime.now().minusDays(days.toLong())
-        val newsList = newsRepository.findAllFromLastWeek(from)
-        return newsList.filter { entityName in it.entities }
+        return newsRepository.findByEntityBetweenDates(entityName, fromDate, toDate)
+    }
+
+    @Transactional(readOnly = true)
+    fun findNewsByEntityPaged(
+        entityName: String,
+        fromDate: LocalDateTime,
+        toDate: LocalDateTime,
+        sentiment: String?,
+        pageable: Pageable
+    ): Page<News> {
+        // преобразуем sentiment в верхний регистр, чтобы соответствовало БД (POSITIVE, NEGATIVE, NEUTRAL)
+        val sentimentParam = sentiment?.uppercase()?.takeIf { it in setOf("POSITIVE", "NEGATIVE", "NEUTRAL") }
+        return newsRepository.findByEntityBetweenDatesAndSentiment(
+            entityName, fromDate, toDate, sentimentParam, pageable
+        )
     }
 
     @Transactional(readOnly = true)

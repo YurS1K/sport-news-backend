@@ -11,6 +11,7 @@ import sport.news.api.sport.entities.News
 import sport.news.api.sport.repositories.NewsRepository
 import sport.news.api.sport.services.NewsCsvService
 import sport.news.api.sport.services.ParsingService
+import sport.news.api.sport.services.TopEntitiesCacheService
 import java.nio.file.Paths
 
 @Component
@@ -18,6 +19,7 @@ class NewsDataUpdater(
     private val parsingService: ParsingService,
     private val csvService: NewsCsvService,
     private val newsRepository: NewsRepository,
+    private val topEntitiesCacheService: TopEntitiesCacheService,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -77,6 +79,8 @@ class NewsDataUpdater(
         if (newNews.isNotEmpty()) {
             newsRepository.saveAll(newNews)
             println("Добавлено новых новостей: ${newNews.size}")
+
+            scope.launch {topEntitiesCacheService.refreshTopEntitiesCache()}
         } else {
             println("Новых новостей нет")
         }
