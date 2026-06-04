@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 @Service
 class TopEntitiesCacheService(
     private val newsRepository: NewsRepository,
-    private val cacheRepository: EntityWeeklyStatRepository
+    private val cacheRepository: EntityWeeklyStatRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -27,7 +27,7 @@ class TopEntitiesCacheService(
      */
     @Transactional(
         propagation = Propagation.REQUIRES_NEW,
-        rollbackFor = [Exception::class]
+        rollbackFor = [Exception::class],
     )
     suspend fun refreshTopEntitiesCache() {
         logger.info("Начат пересчёт кеша топ-сущностей")
@@ -37,16 +37,18 @@ class TopEntitiesCacheService(
             val oneWeekAgo = LocalDateTime.now().minusDays(7)
             val recentNews = newsRepository.findAllFromLastWeek(oneWeekAgo)
 
-            val counts = recentNews
-                .flatMap { it.entities }
-                .groupingBy { it }
-                .eachCount()
-                .map { (entity, count) -> entity to count.toLong() }
+            val counts =
+                recentNews
+                    .flatMap { it.entities }
+                    .groupingBy { it }
+                    .eachCount()
+                    .map { (entity, count) -> entity to count.toLong() }
 
             val now = LocalDateTime.now()
-            val newStats = counts.map { (entity, count) ->
-                EntityWeeklyStat(entity = entity, count = count, calculatedAt = now)
-            }
+            val newStats =
+                counts.map { (entity, count) ->
+                    EntityWeeklyStat(entity = entity, count = count, calculatedAt = now)
+                }
             cacheRepository.saveAll(newStats)
 
             cacheRepository.deleteByCalculatedAtBefore(now)

@@ -3,19 +3,22 @@ package sport.news.api.sport.controllers
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
+import sport.news.api.sport.dto.CompareDto
 import sport.news.api.sport.dto.EntityCountDto
 import sport.news.api.sport.dto.SentimentTimeseriesDto
+import sport.news.api.sport.dto.SourcesStatsDto
 import sport.news.api.sport.entities.News
 import sport.news.api.sport.services.EntityStatsService
-import sport.news.api.sport.services.TopEntitiesCacheService
 import java.time.LocalDate
 
 @RestController
 @RequestMapping("/entities")
 class EntityController(
     private val entityStatsService: EntityStatsService,
-    private val topEntitiesCacheService: TopEntitiesCacheService,
 ) {
     @GetMapping("/top")
     fun getTopEntities(
@@ -56,5 +59,22 @@ class EntityController(
         @RequestParam(defaultValue = "30") days: Int,
     ): SentimentTimeseriesDto {
         return entityStatsService.getSentimentTimeseries(entityName, days)
+    }
+
+    @GetMapping("/compare")
+    fun compareEntities(
+        @RequestParam(name = "entity1") entity1: String,
+        @RequestParam(name = "entity2") entity2: String,
+        @RequestParam(defaultValue = "30") days: Int,
+    ): CompareDto {
+        return entityStatsService.getComparison(entity1, entity2, days)
+    }
+
+    @GetMapping("/sources-stats")
+    fun getSourcesStats(
+        @RequestParam(name = "name") entityName: String,
+        @RequestParam(defaultValue = "30") days: Int,
+    ): SourcesStatsDto {
+        return entityStatsService.getSourcesStats(entityName, days)
     }
 }

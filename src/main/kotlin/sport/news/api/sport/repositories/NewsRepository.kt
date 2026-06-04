@@ -14,7 +14,9 @@ interface NewsRepository : JpaRepository<News, Long> {
     fun findFirstByLink(link: String): News?
 
     @Query("SELECT n FROM News n LEFT JOIN FETCH n.entities WHERE n.date >= :fromDate")
-    fun findAllFromLastWeek(@Param("fromDate") fromDate: LocalDateTime): List<News>
+    fun findAllFromLastWeek(
+        @Param("fromDate") fromDate: LocalDateTime,
+    ): List<News>
 
     @Query("SELECT n FROM News n JOIN n.entities e WHERE e = :entityName AND n.date >= :fromDate ORDER BY n.date DESC")
     fun findByEntityFromDate(
@@ -26,21 +28,23 @@ interface NewsRepository : JpaRepository<News, Long> {
     fun findByEntityBetweenDates(
         @Param("entityName") entityName: String,
         @Param("fromDate") fromDate: LocalDateTime,
-        @Param("toDate") toDate: LocalDateTime
+        @Param("toDate") toDate: LocalDateTime,
     ): List<News>
 
-    @Query("""
-        SELECT n FROM News n JOIN n.entities e 
-        WHERE e = :entityName 
-          AND n.date BETWEEN :fromDate AND :toDate 
-          AND (:sentiment IS NULL OR n.sentiment = :sentiment)
-        ORDER BY n.date DESC
-    """)
+    @Query(
+        """
+    SELECT n FROM News n JOIN n.entities e 
+    WHERE LOWER(e) LIKE LOWER(CONCAT('%', :entityName, '%'))
+      AND n.date BETWEEN :fromDate AND :toDate 
+      AND (:sentiment IS NULL OR n.sentiment = :sentiment)
+    ORDER BY n.date DESC
+    """,
+    )
     fun findByEntityBetweenDatesAndSentiment(
         @Param("entityName") entityName: String,
         @Param("fromDate") fromDate: LocalDateTime,
         @Param("toDate") toDate: LocalDateTime,
         @Param("sentiment") sentiment: String?,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<News>
 }

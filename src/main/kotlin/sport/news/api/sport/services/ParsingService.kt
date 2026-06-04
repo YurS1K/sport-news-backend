@@ -10,7 +10,6 @@ import java.util.concurrent.CompletableFuture
 
 @Service
 class ParsingService(
-    private val pythonScriptService: PythonScriptService,
     @Lazy private val newsDataUpdater: NewsDataUpdater,
 ) {
     @Value("\${python.path:python3}")

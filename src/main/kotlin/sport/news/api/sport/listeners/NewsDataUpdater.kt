@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import sport.news.api.sport.entities.News
 import sport.news.api.sport.repositories.NewsRepository
+import sport.news.api.sport.services.AuthorStatsCacheService
 import sport.news.api.sport.services.NewsCsvService
 import sport.news.api.sport.services.ParsingService
 import sport.news.api.sport.services.TopEntitiesCacheService
@@ -20,6 +21,7 @@ class NewsDataUpdater(
     private val csvService: NewsCsvService,
     private val newsRepository: NewsRepository,
     private val topEntitiesCacheService: TopEntitiesCacheService,
+    private val authorStatsCacheService: AuthorStatsCacheService,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -80,7 +82,8 @@ class NewsDataUpdater(
             newsRepository.saveAll(newNews)
             println("Добавлено новых новостей: ${newNews.size}")
 
-            scope.launch {topEntitiesCacheService.refreshTopEntitiesCache()}
+            scope.launch { topEntitiesCacheService.refreshTopEntitiesCache() }
+            scope.launch { authorStatsCacheService.refreshCache() }
         } else {
             println("Новых новостей нет")
         }
